@@ -40,7 +40,6 @@ void ejecutar_simple(vector<char *> &args, const string &ruta_comando)
 }
 
 
-
 void ejecutar_comando(vector<string> &tokens)
 {
 
@@ -173,26 +172,56 @@ void ejecutar_comando(vector<string> &tokens)
             ruta_comando = "/bin/" + ruta_comando;
         }
         
-        // Busca si el comando incluye una redirección de salida (>)
-        bool hay_redireccion = false;
-        string archivo_salida;
         vector<char *> args;
+        string archivo_salida, archivo_entrada;
+        bool hay_redireccion_salida = false;
+        bool hay_redireccion_entrada = false;
+        bool modo_append = false;
 
         for (size_t i = 0; i < tokens.size(); i++)
         {
             if (tokens[i] == ">")
             {
-                hay_redireccion = true;
+                hay_redireccion_salida = true;
                 if (i + 1 < tokens.size())
                 {
                     archivo_salida = tokens[i + 1];
+                    i++; // Salta el nombre del archivo
                 }
                 else
                 {
                     cerr << "Error: falta el nombre del archivo después de '>'" << endl;
                     return;
                 }
-                break;
+            }
+            else if (tokens[i] == ">>")
+            {
+                hay_redireccion_salida = true;
+                modo_append = true;
+                if (i + 1 < tokens.size())
+                {
+                    archivo_salida = tokens[i + 1];
+                    i++; // Salta el nombre del archivo
+                }
+                else
+                {
+                    cerr << "Error: falta el nombre del archivo después de '>>'" << endl;
+                    return;
+                }
+            }
+            else if (tokens[i] == "<")
+            {
+                hay_redireccion_entrada = true;
+                if (i + 1 < tokens.size())
+                {
+                    archivo_entrada = tokens[i + 1];
+                    i++; // Salta el nombre del archivo
+                }
+                else
+                {
+                    cerr << "Error: falta el nombre del archivo después de '<'" << endl;
+                    return;
+                }
             }
             else
             {
@@ -211,17 +240,37 @@ void ejecutar_comando(vector<string> &tokens)
 
         if (pid == 0)
         {
-            if (hay_redireccion)
+
+            if (hay_redireccion_entrada)
             {
-                int desc_archivo = open(archivo_salida.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                if (desc_archivo < 0)
-                {
-                    perror("Error al abrir el archivo para redirección\n");
+                int desc_archivo_in = open(archivo_entrada.c_str(), O_RDONLY);
+                if (desc_archivo_in < 0) {
+                    perror("Error al abrir el archivo para redirección de entrada");
                     exit(1);
                 }
-                dup2(desc_archivo, STDOUT_FILENO);
-                close(desc_archivo);
+                dup2(desc_archivo_in, STDIN_FILENO);
+                close(desc_archivo_in);
             }
+
+            if (hay_redireccion_salida)
+            {
+                int flags = O_WRONLY | O_CREAT;
+                // Decidir si truncar o añadir al final
+                if (modo_append) {
+                    flags |= O_APPEND;
+                } else {
+                    flags |= O_TRUNC;
+                }
+                
+                int desc_archivo_out = open(archivo_salida.c_str(), flags, 0644);
+                if (desc_archivo_out < 0) {
+                    perror("Error al abrir el archivo para redirección de salida");
+                    exit(1);
+                }
+                dup2(desc_archivo_out, STDOUT_FILENO);
+                close(desc_archivo_out);
+            }
+
 
             if (execvp(args[0], args.data()) == -1)
             {
