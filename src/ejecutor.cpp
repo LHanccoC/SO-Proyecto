@@ -29,7 +29,7 @@ void ejecutar_simple(vector<char *> &args, const string &ruta_comando)
 {
     if (!verificar_comando(ruta_comando))
     {
-        return;
+        exit(1);
     }
 
     if (execvp(args[0], args.data()) == -1)
