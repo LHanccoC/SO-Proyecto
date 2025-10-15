@@ -1,7 +1,7 @@
 # SO-Proyecto - MiniShell en C++ sobre Linux
 
 ## Descripción
-Este proyecto es una implementación de un intérprete de comandos tipo mini-shell desarrollado en C++ para sistemas Linux. MiniShell permite ejecutar comandos del sistema, soporta procesos hijo con fork/exec, redirección de salida, el manejo de errores y finaliza con el comando 'salir'.
+Este proyecto es una implementación de un intérprete de comandos tipo mini-shell desarrollado en C++ para sistemas Linux. MiniShell permite ejecutar comandos del sistema, soporta procesos hijo con fork/exec, redirección de salida avanzada, el manejo de errores, procesos en segundo plano y finaliza con el comando 'salir'.
 
 ## Requerimientos
 Antes de comenzar, debes tener lo siguiente:
@@ -32,6 +32,7 @@ Las caracteristicas base que debe cumplir la miniSHell son las siguientes:
 **Extensiones implementadas**
 - Pipes simples (cmd1 | cmd2).
 - Ejecución de tareas en segundo plano (&) no bloqueante para el prompt y muestra waitpid no bloqueante.
+- Redirección avanzada: < (entrada), >> (append).
 
 ## Casos de prueba y ejemplos de uso
 Para los casos prueba se consideraron los siguientes:
@@ -54,3 +55,15 @@ Para los casos prueba se consideraron los siguientes:
 - Comando salir termina la shell.
         
   ![salir](docs/images/salir.png)
+
+- Comando grep filtra la salida del comando ls.
+
+  ![pipe](docs/images/pipe.png)
+
+- Comando sleep 10 puede ejecutarse mientras lo hacen otros comandos.
+
+  ![segundo_plano](docs/images/segundo_plano.png)
+
+- Redirección usando >> y < funciona para un archivo.
+
+  ![redirección](docs/images/redireccion.png)
