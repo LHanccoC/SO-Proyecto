@@ -39,11 +39,27 @@ void ejecutar_simple(vector<char *> &args, const string &ruta_comando)
     }
 }
 
+
+
 void ejecutar_comando(vector<string> &tokens)
 {
 
     if (tokens.empty())
         return;
+
+
+    // Busca si el comando incluye una ejecución en segundo plano (&)
+    bool en_segundo_plano = false;
+    if (tokens.back() == "&")
+    {
+        en_segundo_plano = true;
+        tokens.pop_back(); 
+    }
+
+    if (tokens.empty())
+    {
+        return;
+    }
 
     // Caso especial: comando para salir de la mini-shell
     if (tokens[0] == "salir")
@@ -134,22 +150,29 @@ void ejecutar_comando(vector<string> &tokens)
 
         close(pipefd[0]);
         close(pipefd[1]);
-        waitpid(pid1, nullptr, 0);
-        waitpid(pid2, nullptr, 0);
+
+        // Esperar solo si no esta en segundo plano
+
+        if (!en_segundo_plano)
+        {
+            waitpid(pid1, nullptr, 0);
+            waitpid(pid2, nullptr, 0);
+        }
+
+        else
+        {
+            cout << "Proceso en segundo plano: " << pid1 << " |" << pid2 << endl;
+        }
     }
     else
     {
+
         string ruta_comando = tokens[0];
         if (ruta_comando[0] != '/')
         {
             ruta_comando = "/bin/" + ruta_comando;
         }
-
-        if (!verificar_comando(ruta_comando))
-        {
-            return;
-        }
-
+        
         // Busca si el comando incluye una redirección de salida (>)
         bool hay_redireccion = false;
         string archivo_salida;
@@ -208,9 +231,15 @@ void ejecutar_comando(vector<string> &tokens)
         }
         else
         {
-            // Proceso padre: espera a que el hijo termine
-            waitpid(pid, nullptr, 0);
+            // Si el comando no es en segundo plano, espera a que termine
+            if (!en_segundo_plano)
+            {
+                waitpid(pid, nullptr, 0);
+            }
+            else
+            {
+                cout << "Proceso en segundo plano: " << pid << endl;
+            }
         }
     }
 }
-
